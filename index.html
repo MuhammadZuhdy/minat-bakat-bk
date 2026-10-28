@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layanan Klasikal BK - Eksplorasi Minat Bakat</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#4f46e5', // Indigo 600
+                        secondary: '#3b82f6', // Blue 500
+                        surface: '#ffffff',
+                        background: '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        
+        /* Smooth Transitions */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: all 0.4s ease-out; }
+        
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Interactive Flip Cards for Materi */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            height: 280px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.1);
+        }
+        
+        .flip-card-front {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .flip-card-back {
+            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        /* Option Button Styling */
+        .btn-option {
+            transition: all 0.2s ease;
+        }
+        .btn-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+            border-color: #4f46e5;
+        }
+        .btn-option:active { transform: translateY(0); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-indigo-100 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                    <i class="ph ph-compass text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 leading-tight">TalentDiscover</h1>
+                    <p class="text-[10px] font-semibold text-indigo-500 uppercase tracking-widest">Layanan Klasikal BK</p>
+                </div>
+            </div>
+            <button onclick="navigateTo('home')" class="text-sm font-medium text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5">
+                <i class="ph ph-house"></i> Beranda
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
+        
+        <!-- ==================== 1. SCREEN: HOME (DASHBOARD) ==================== -->
+        <div id="screen-home" class="screen active max-w-4xl mx-auto">
+            <div class="text-center space-y-4 mb-12">
+                <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold tracking-wide border border-indigo-100">Kurikulum Merdeka Edition</span>
+                <h2 class="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
+                    Eksplorasi <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">Minat & Bakat</span>
+                </h2>
+                <p class="text-slate-500 text-base sm:text-lg max-w-2xl mx-auto">
+                    Aplikasi pendamping Bimbingan Klasikal untuk membantu siswa memetakan potensi diri menggunakan teori Holland (RIASEC) dan menyelaraskannya dengan pilihan karir masa depan.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Menu 1: Materi -->
+                <div onclick="navigateTo('materi')" class="group bg-white rounded-3xl p-8 border border-slate-200 shadow-lg shadow-slate-200/50 cursor-pointer hover:border-indigo-300 hover:shadow-indigo-100 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="ph ph-presentation-chart"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Materi Klasikal</h3>
+                    <p class="text-sm text-slate-500 mb-6">Penjelasan interaktif 6 tipe kepribadian RIASEC. Cocok ditampilkan di proyektor/smartboard untuk diskusi kelas.</p>
+                    <div class="flex items-center text-blue-600 font-semibold text-sm">
+                        Buka Materi <i class="ph ph-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Menu 2: Tes -->
+                <div onclick="startTest()" class="group bg-gradient-to-br from-indigo-600 to-blue-600 rounded-3xl p-8 shadow-xl shadow-indigo-200 cursor-pointer hover:shadow-2xl hover:shadow-indigo-300 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="w-14 h-14 rounded-2xl bg-white/20 text-white flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="ph ph-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Mulai Tes Minat</h3>
+                    <p class="text-sm text-indigo-100 mb-6">Asesmen cepat (12 Pertanyaan) untuk memetakan minat dominan siswa beserta rekomendasi mapel & karir.</p>
+                    <div class="flex items-center text-white font-semibold text-sm">
+                        Mulai Asesmen <i class="ph ph-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 2. SCREEN: MATERI KLASIKAL ==================== -->
+        <div id="screen-materi" class="screen">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-slate-900 mb-3">6 Dimensi Minat Holland (RIASEC)</h2>
+                <p class="text-slate-500 text-sm max-w-2xl mx-auto">Arahkan kursor (atau sentuh) pada kartu di bawah ini untuk melihat deskripsi dan contoh karir dari setiap tipe kepribadian.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card R -->
+                <div class="flip-card group">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="ph ph-wrench text-5xl text-indigo-500 mb-4"></i>
+                            <h3 class="text-2xl font-black text-slate-800">Realistic (R)</h3>
+                            <p class="text-sm font-semibold text-slate-500 mt-2 uppercase tracking-wide">The "Do-ers"</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <h4 class="font-bold text-lg mb-2">Karakteristik:</h4>
+                            <p class="text-sm text-indigo-100 mb-4 px-2">Menyukai aktivitas praktis, bekerja dengan alat/mesin, hewan, atau alam. Mengutamakan tindakan nyata daripada teori.</p>
+                            <div class="w-full h-px bg-white/20 mb-3"></div>
+                            <p class="text-xs font-semibold text-indigo-200 uppercase">Contoh Karir:</p>
+                            <p class="text-sm font-medium">Insinyur, Mekanik, Arsitek, Ahli Pertanian, Pilot.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card I -->
+                <div class="flip-card group">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="ph ph-magnifying-glass text-5xl text-blue-500 mb-4"></i>
+                            <h3 class="text-2xl font-black text-slate-800">Investigative (I)</h3>
+                            <p class="text-sm font-semibold text-slate-500 mt-2 uppercase tracking-wide">The "Thinkers"</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <h4 class="font-bold text-lg mb-2">Karakteristik:</h4>
+                            <p class="text-sm text-blue-100 mb-4 px-2">Analitis, suka meneliti, observasi, dan memecahkan masalah matematika atau sains yang kompleks.</p>
+                            <div class="w-full h-px bg-white/20 mb-3"></div>
+                            <p class="text-xs font-semibold text-blue-200 uppercase">Contoh Karir:</p>
+                            <p class="text-sm font-medium">Ilmuwan, Dokter, Data Analyst, Programmer, Peneliti.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card A -->
+                <div class="flip-card group">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="ph ph-palette text-5xl text-purple-500 mb-4"></i>
+                            <h3 class="text-2xl font-black text-slate-800">Artistic (A)</h3>
+                            <p class="text-sm font-semibold text-slate-500 mt-2 uppercase tracking-wide">The "Creators"</p>
+                        </div>
+                        <div class="flip-card-back" style="background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);">
+                            <h4 class="font-bold text-lg mb-2">Karakteristik:</h4>
+                            <p class="text-sm text-purple-100 mb-4 px-2">Kreatif, imajinatif, inovatif. Lebih suka bekerja dalam situasi yang tidak terstruktur untuk mengekspresikan diri.</p>
+                            <div class="w-full h-px bg-white/20 mb-3"></div>
+                            <p class="text-xs font-semibold text-purple-200 uppercase">Contoh Karir:</p>
+                            <p class="text-sm font-medium">Desainer Grafis, Musisi, Penulis, Aktor, Animator.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card S -->
+                <div class="flip-card group">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="ph ph-users-three text-5xl text-rose-500 mb-4"></i>
+                            <h3 class="text-2xl font-black text-slate-800">Social (S)</h3>
+                            <p class="text-sm font-semibold text-slate-500 mt-2 uppercase tracking-wide">The "Helpers"</p>
+                        </div>
+                        <div class="flip-card-back" style="background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
+                            <h4 class="font-bold text-lg mb-2">Karakteristik:</h4>
+                            <p class="text-sm text-rose-100 mb-4 px-2">Empatik, sabar, ramah. Senang bekerja dengan orang lain untuk mendidik, menyembuhkan, atau menginformasikan.</p>
+                            <div class="w-full h-px bg-white/20 mb-3"></div>
+                            <p class="text-xs font-semibold text-rose-200 uppercase">Contoh Karir:</p>
+                            <p class="text-sm font-medium">Guru, Psikolog, Perawat, Konselor BK, Pekerja Sosial.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card E -->
+                <div class="flip-card group">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="ph ph-briefcase text-5xl text-amber-500 mb-4"></i>
+                            <h3 class="text-2xl font-black text-slate-800">Enterprising (E)</h3>
+                            <p class="text-sm font-semibold text-slate-500 mt-2 uppercase tracking-wide">The "Persuaders"</p>
+                        </div>
+                        <div class="flip-card-back" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                            <h4 class="font-bold text-lg mb-2">Karakteristik:</h4>
+                            <p class="text-sm text-amber-100 mb-4 px-2">Energik, ambisius, sosiabel. Suka memimpin, memengaruhi orang lain, dan berani mengambil risiko untuk tujuan bisnis.</p>
+                            <div class="w-full h-px bg-white/20 mb-3"></div>
+                            <p class="text-xs font-semibold text-amber-200 uppercase">Contoh Karir:</p>
+                            <p class="text-sm font-medium">Pengusaha, Manajer, Pengacara, Marketing, Politisi.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card C -->
+                <div class="flip-card group">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="ph ph-folders text-5xl text-teal-500 mb-4"></i>
+                            <h3 class="text-2xl font-black text-slate-800">Conventional (C)</h3>
+                            <p class="text-sm font-semibold text-slate-500 mt-2 uppercase tracking-wide">The "Organizers"</p>
+                        </div>
+                        <div class="flip-card-back" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
+                            <h4 class="font-bold text-lg mb-2">Karakteristik:</h4>
+                            <p class="text-sm text-teal-100 mb-4 px-2">Teliti, efisien, teratur. Menyukai aktivitas yang melibatkan pengelolaan data, dokumen, dan prosedur yang jelas.</p>
+                            <div class="w-full h-px bg-white/20 mb-3"></div>
+                            <p class="text-xs font-semibold text-teal-200 uppercase">Contoh Karir:</p>
+                            <p class="text-sm font-medium">Akuntan, Administrator, Staf HRD, Analis Keuangan, Arsiparis.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <button onclick="startTest()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg transition">
+                    Lanjutkan ke Tes Minat <i class="ph ph-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== 3. SCREEN: TEST / KUIS ==================== -->
+        <div id="screen-test" class="screen max-w-3xl mx-auto">
+            <!-- Progress Header -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 mb-6">
+                <div class="flex justify-between items-end mb-3">
+                    <div>
+                        <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">Asesmen Minat Bakat</p>
+                        <h3 class="text-lg font-bold text-slate-800">Pertanyaan <span id="q-current" class="text-indigo-600">1</span> dari <span id="q-total">12</span></h3>
+                    </div>
+                    <span id="q-percent" class="text-sm font-semibold text-slate-500">8%</span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-300" style="width: 8%"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white p-8 sm:p-10 rounded-3xl shadow-xl shadow-indigo-100/50 border border-slate-100 text-center">
+                <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <i class="ph ph-chat-circle-question text-3xl text-indigo-600"></i>
+                </div>
+                
+                <h2 id="question-text" class="text-xl sm:text-2xl font-bold text-slate-800 mb-10 leading-snug">
+                    Memuat pertanyaan...
+                </h2>
+
+                <!-- Likert Options -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <button onclick="handleAnswer(4)" class="btn-option w-full py-4 px-6 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-2xl flex items-center justify-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">4</span>
+                        Sangat Setuju
+                    </button>
+                    <button onclick="handleAnswer(3)" class="btn-option w-full py-4 px-6 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-2xl flex items-center justify-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs">3</span>
+                        Setuju
+                    </button>
+                    <button onclick="handleAnswer(2)" class="btn-option w-full py-4 px-6 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-2xl flex items-center justify-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs">2</span>
+                        Kurang Setuju
+                    </button>
+                    <button onclick="handleAnswer(1)" class="btn-option w-full py-4 px-6 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-2xl flex items-center justify-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-xs">1</span>
+                        Tidak Setuju
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 4. SCREEN: RESULT DASHBOARD ==================== -->
+        <div id="screen-result" class="screen max-w-5xl mx-auto">
+            
+            <div class="bg-indigo-600 rounded-3xl p-8 sm:p-10 text-center text-white mb-8 shadow-xl shadow-indigo-200 relative overflow-hidden">
+                <!-- BG Decoration -->
+                <i class="ph ph-sparkle text-[150px] absolute -top-10 -right-10 text-indigo-500/50 rotate-12"></i>
+                
+                <p class="text-indigo-200 font-semibold tracking-widest uppercase text-sm mb-2 relative z-10">Tipe Dominan Anda</p>
+                <h2 id="res-title" class="text-4xl sm:text-5xl font-black mb-4 relative z-10">Investigative (I)</h2>
+                <p id="res-desc" class="text-indigo-100 text-sm sm:text-base max-w-2xl mx-auto relative z-10">
+                    Anda adalah pemikir yang logis. Suka menganalisis, meneliti, dan memecahkan masalah yang kompleks.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Left: Chart -->
+                <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="ph ph-chart-polar text-indigo-500 text-xl"></i> Profil Spektrum RIASEC
+                    </h3>
+                    <div class="flex-1 w-full min-h-[300px] flex items-center justify-center relative">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Right: Kurikulum Merdeka Rekomendasi -->
+                <div class="flex flex-col gap-6">
+                    <!-- Mapel -->
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Rekomendasi Fase F (SMA)</h4>
+                        <h3 class="text-xl font-bold text-slate-800 mb-3">Mata Pelajaran Pilihan</h3>
+                        <p id="res-mapel" class="text-slate-600 text-sm leading-relaxed font-medium">
+                            Fisika Tingkat Lanjut, Matematika Tingkat Lanjut, Kimia.
+                        </p>
+                    </div>
+                    
+                    <!-- Jurusan -->
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-indigo-500">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Rekomendasi Karir & PTN</h4>
+                        <h3 class="text-xl font-bold text-slate-800 mb-3">Rumpun Program Studi</h3>
+                        <div id="res-jurusan" class="flex flex-wrap gap-2">
+                            <!-- Tags injected via JS -->
+                        </div>
+                    </div>
+
+                    <button onclick="resetApp()" class="mt-auto w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition flex items-center justify-center gap-2">
+                        <i class="ph ph-arrow-counter-clockwise text-lg"></i> Ulangi Asesmen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Javascript Logic Engine -->
+    <script>
+        /* =================== DATA =================== */
+        const QUESTIONS = [
+            { text: "Saya sangat menikmati kegiatan merakit barang, memperbaiki mesin, atau bekerja dengan peralatan tangan.", trait: "R" },
+            { text: "Saya senang memecahkan teka-teki logika, membaca artikel sains, dan menganalisis data.", trait: "I" },
+            { text: "Saya merasa puas ketika bisa mendesain sesuatu, menggambar, atau menciptakan karya seni yang indah.", trait: "A" },
+            { text: "Mendengarkan keluh kesah teman dan membantu menyelesaikan masalah pribadi mereka adalah hal yang menyenangkan bagi saya.", trait: "S" },
+            { text: "Saya berani mengambil risiko, memimpin tim, dan meyakinkan orang lain untuk mengikuti ide saya.", trait: "E" },
+            { text: "Saya sangat teliti terhadap detail, suka mengatur dokumen, dan merasa nyaman dengan jadwal yang terstruktur.", trait: "C" },
+            { text: "Saya lebih memilih bekerja di luar ruangan atau mempraktikkan hal secara fisik daripada duduk di belakang meja.", trait: "R" },
+            { text: "Saya selalu penasaran tentang bagaimana sesuatu bekerja secara ilmiah atau teknis.", trait: "I" },
+            { text: "Saya lebih suka mengekspresikan perasaan saya melalui musik, tulisan kreatif, atau akting.", trait: "A" },
+            { text: "Bekerja sama dalam tim dan mendidik atau melatih orang lain adalah keahlian utama saya.", trait: "S" },
+            { text: "Saya menikmati persaingan, menyusun strategi bisnis, dan mencapai target yang menguntungkan.", trait: "E" },
+            { text: "Saya tidak suka ketidakpastian. Saya lebih suka mengikuti aturan, prosedur (SOP), dan memastikan akurasi data.", trait: "C" }
+        ];
+
+        const PROFILES = {
+            "R": {
+                name: "Realistic (R)",
+                desc: "Anda memiliki kepribadian praktis dan teknikal. Anda lebih suka bertindak dan memecahkan masalah secara konkret menggunakan alat, mesin, atau aktivitas fisik.",
+                mapel: "Fisika Tingkat Lanjut, Prakarya dan Kewirausahaan, Informatika.",
+                jurusan: ["Teknik Mesin", "Teknik Sipil", "Ilmu Komputer", "Agroteknologi", "Penerbangan"]
+            },
+            "I": {
+                name: "Investigative (I)",
+                desc: "Anda adalah pemikir yang logis dan analitis. Anda suka meneliti, mengobservasi, dan memecahkan masalah yang berkaitan dengan sains atau matematika.",
+                mapel: "Matematika Tingkat Lanjut, Biologi, Kimia, Fisika.",
+                jurusan: ["Kedokteran", "Farmasi", "Data Science", "Statistika", "Bioteknologi"]
+            },
+            "A": {
+                name: "Artistic (A)",
+                desc: "Anda sangat kreatif dan ekspresif. Anda cenderung menghindari pekerjaan rutin dan lebih suka berkarya dalam lingkungan yang bebas secara visual, audio, atau literal.",
+                mapel: "Seni Budaya (Rupa/Musik), Bahasa Inggris Tingkat Lanjut, Antropologi.",
+                jurusan: ["Desain Komunikasi Visual", "Arsitektur", "Ilmu Komunikasi", "Seni Rupa", "Sastra"]
+            },
+            "S": {
+                name: "Social (S)",
+                desc: "Anda memiliki empati yang tinggi dan berjiwa penolong. Anda sangat piawai dalam berinteraksi, mendidik, menyembuhkan, dan memahami perasaan orang lain.",
+                mapel: "Sosiologi, Geografi, Pendidikan Pancasila.",
+                jurusan: ["Psikologi", "Pendidikan/Keguruan", "Keperawatan", "Kesejahteraan Sosial", "Hubungan Internasional"]
+            },
+            "E": {
+                name: "Enterprising (E)",
+                desc: "Anda adalah pemimpin yang persuasif dan ambisius. Anda suka mengambil inisiatif, mengelola tim, dan mengejar target berorientasi pada hasil atau keuntungan.",
+                mapel: "Ekonomi, Matematika Terapan, Sosiologi.",
+                jurusan: ["Manajemen Bisnis", "Hukum", "Ilmu Politik", "Pemasaran (Marketing)", "Kewirausahaan"]
+            },
+            "C": {
+                name: "Conventional (C)",
+                desc: "Anda adalah organisator yang teliti dan terstruktur. Anda sangat handal dalam mengelola data, keuangan, dan memastikan segala sesuatu berjalan sesuai aturan.",
+                mapel: "Ekonomi (Akuntansi), Matematika Lanjut, Informatika.",
+                jurusan: ["Akuntansi", "Administrasi Publik", "Ilmu Perpustakaan", "Manajemen Keuangan", "Statistika"]
+            }
+        };
+
+        /* =================== STATE =================== */
+        let currentQuestionIdx = 0;
+        let scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+        let radarChartInstance = null;
+
+        /* =================== LOGIC =================== */
+        
+        function navigateTo(screenId) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function startTest() {
+            currentQuestionIdx = 0;
+            scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+            document.getElementById('q-total').innerText = QUESTIONS.length;
+            renderQuestion();
+            navigateTo('test');
+        }
+
+        function renderQuestion() {
+            const q = QUESTIONS[currentQuestionIdx];
+            document.getElementById('question-text').innerText = q.text;
+            
+            const num = currentQuestionIdx + 1;
+            document.getElementById('q-current').innerText = num;
+            
+            const percent = Math.round((num / QUESTIONS.length) * 100);
+            document.getElementById('q-percent').innerText = `${percent}%`;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+        }
+
+        function handleAnswer(points) {
+            const currentTrait = QUESTIONS[currentQuestionIdx].trait;
+            scores[currentTrait] += points;
+
+            if (currentQuestionIdx < QUESTIONS.length - 1) {
+                currentQuestionIdx++;
+                renderQuestion();
+            } else {
+                processResults();
+            }
+        }
+
+        function processResults() {
+            // Find highest score
+            let maxScore = 0;
+            let dominantTrait = 'R';
+            
+            for (const trait in scores) {
+                if (scores[trait] > maxScore) {
+                    maxScore = scores[trait];
+                    dominantTrait = trait;
+                }
+            }
+
+            // Populate Result UI
+            const profile = PROFILES[dominantTrait];
+            document.getElementById('res-title').innerText = profile.name;
+            document.getElementById('res-desc').innerText = profile.desc;
+            document.getElementById('res-mapel').innerText = profile.mapel;
+
+            const jurusanContainer = document.getElementById('res-jurusan');
+            jurusanContainer.innerHTML = '';
+            profile.jurusan.forEach(j => {
+                const span = document.createElement('span');
+                span.className = "px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-100";
+                span.innerText = j;
+                jurusanContainer.appendChild(span);
+            });
+
+            navigateTo('result');
+            drawRadarChart();
+        }
+
+        function drawRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (radarChartInstance) {
+                radarChartInstance.destroy();
+            }
+
+            const dataValues = [
+                scores.R, scores.I, scores.A, 
+                scores.S, scores.E, scores.C
+            ];
+
+            // Normalize max scale (2 questions * max 4 points = 8 max score per trait)
+            // But we'll set max to 8 to ensure chart looks proportional
+            
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Realistic', 'Investigative', 'Artistic', 'Social', 'Enterprising', 'Conventional'],
+                    datasets: [{
+                        label: 'Skor Minat',
+                        data: dataValues,
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)', // Indigo 600 with opacity
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)', // Blue 500
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.05)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                            pointLabels: {
+                                font: { family: 'Inter', size: 12, weight: '600' },
+                                color: '#475569'
+                            },
+                            ticks: {
+                                display: false,
+                                min: 0,
+                                max: 8,
+                                stepSize: 2
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                            padding: 12,
+                            titleFont: { family: 'Inter', size: 13 },
+                            bodyFont: { family: 'Inter', size: 14, weight: 'bold' },
+                            displayColors: false,
+                        }
+                    }
+                }
+            });
+        }
+
+        function resetApp() {
+            navigateTo('home');
+        }
+
+        // Initialize Phosphor Icons
+        window.onload = () => {
+            if (window.PhosphorIcons) {
+                PhosphorIcons.replace();
+            }
+        }
+    </script>
+</body>
+</html>
